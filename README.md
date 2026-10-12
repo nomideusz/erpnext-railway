@@ -1,6 +1,6 @@
 # Deploy and Host ERPNext 16 on Railway
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/erpnext-16?utm_medium=integration&utm_source=button&utm_campaign=erpnext-16)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/erpnext-16?referralCode=sLjDXb&utm_medium=integration&utm_source=button&utm_campaign=erpnext-16)
 
 [ERPNext](https://erpnext.com/) is the open-source ERP built on the Frappe framework: accounting, invoicing, inventory, buying and selling, manufacturing, projects, CRM and a website, all in one database with no per-user fees. This template runs ERPNext v16 the way `bench setup production` runs it on a server, with nightly backups and upgrades handled for you.
 
