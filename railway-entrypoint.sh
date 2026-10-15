@@ -12,7 +12,7 @@ SITE=erp  # a site may not share its name with an app
 cd "$BENCH"
 # An array, not a function: a backgrounded function runs in a subshell that
 # swallows SIGTERM instead of passing it on.
-AS_FRAPPE=(setpriv --reuid=frappe --regid=frappe --init-groups env HOME=/home/frappe)
+AS_FRAPPE=(setpriv --reuid=frappe --regid="$(id -g frappe)" --init-groups env HOME=/home/frappe)
 : "${DB_HOST:?DB_HOST is not set}" "${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is not set}"
 
 # Worker counts follow the memory Railway gives this service (the cgroup limit is the
@@ -23,14 +23,14 @@ WEB_WORKERS=${ERPNEXT_WEB_WORKERS:-$([ "$small" = 1 ] && echo 1 || echo 2)}
 BG_WORKERS=${ERPNEXT_BG_WORKERS:-$([ "$small" = 1 ] && echo 1 || echo 2)}
 
 # Railway volumes mount root-owned.
-chown frappe:frappe sites
+chown frappe: sites
 # The volume hides what the image keeps in sites/: the app list, and the built
 # assets, linked from the image so a new version serves its own.
 cp /home/frappe/apps.txt /home/frappe/apps.json sites/
 rm -rf sites/assets
 ln -s "$BENCH/assets" sites/assets
 mkdir -p sites/.redis
-chown frappe:frappe sites/apps.txt sites/apps.json sites/.redis
+chown frappe: sites/apps.txt sites/apps.json sites/.redis
 
 # Merged rather than rewritten, so settings made with `bench set-config -g` survive.
 conf=sites/common_site_config.json
@@ -40,7 +40,7 @@ jq --arg host "$DB_HOST" --argjson port "${DB_PORT:-3306}" '. + {
       redis_cache: "redis://127.0.0.1:13000", redis_queue: "redis://127.0.0.1:11000",
       redis_socketio: "redis://127.0.0.1:11000"}' "$conf" > "$conf.new"
 mv "$conf.new" "$conf"
-chown frappe:frappe "$conf"
+chown frappe: "$conf"
 
 trap 'kill $(jobs -p) 2>/dev/null; wait; exit 0' TERM INT
 

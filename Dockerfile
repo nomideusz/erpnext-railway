@@ -1,7 +1,7 @@
 # Pinned: frappe/erpnext:v16 moves with every weekly release, and a silent rebase can
 # break every deploy of this template at once. Bump deliberately; the entrypoint
 # backs up and migrates the site on the first boot of a new version.
-FROM frappe/erpnext:v16.35.0
+FROM frappe/erpnext:v16.51.1
 
 USER root
 

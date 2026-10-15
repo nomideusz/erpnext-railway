@@ -9,9 +9,9 @@ cd /home/frappe/frappe-bench
 dir=$(mktemp -d)
 f=/tmp/erpnext-$(date -u +%a).tar
 trap 'rm -rf "$dir" "$f"' EXIT
-chown frappe:frappe "$dir"
+chown frappe: "$dir"
 
-setpriv --reuid=frappe --regid=frappe --init-groups env HOME=/home/frappe \
+setpriv --reuid=frappe --regid="$(id -g frappe)" --init-groups env HOME=/home/frappe \
   bench --site erp backup --with-files --compress --backup-path "$dir" 2>&1
 tar -C "$dir" -cf "$f" .
 # Railway buckets are virtual-hosted style: https://<bucket>.<endpoint host>/<key>

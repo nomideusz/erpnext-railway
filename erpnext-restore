@@ -16,7 +16,7 @@ else
     -u "$S3_ACCESS_KEY_ID:$S3_SECRET_ACCESS_KEY" \
     "https://$S3_BUCKET.${S3_ENDPOINT#https://}/erpnext-$1.tar" | tar -C "$dir" -xf -
 fi
-chown -R frappe:frappe "$dir"
+chown -R frappe: "$dir"
 set -- "$dir"/*-database.sql.gz "$dir"/*-erp-files.tgz "$dir"/*-private-files.tgz "$dir"/*-site_config_backup.json
 
 # Passwords stored in ERPNext (email accounts, integrations) are encrypted with the
@@ -26,7 +26,7 @@ conf=sites/erp/site_config.json
 jq --slurpfile b "$4" '.encryption_key = ($b[0].encryption_key // .encryption_key)' "$conf" > "$dir/conf"
 cat "$dir/conf" > "$conf"
 
-as_frappe=(setpriv --reuid=frappe --regid=frappe --init-groups env HOME=/home/frappe)
+as_frappe=(setpriv --reuid=frappe --regid="$(id -g frappe)" --init-groups env HOME=/home/frappe)
 "${as_frappe[@]}" bench --site erp restore "$1" --with-public-files "$2" \
   --with-private-files "$3" --db-root-username root --db-root-password "$DB_ROOT_PASSWORD" 2>&1
 "${as_frappe[@]}" bench --site erp migrate 2>&1 | sed -u 's/.*\r//'
