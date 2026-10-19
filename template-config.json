@@ -18,7 +18,7 @@
         "restartPolicyMaxRetries": 10
       },
       "source": {
-        "repo": "https://github.com/nomideusz/erpnext-railway",
+        "repo": "https://github.com/two-workspaces/erpnext",
         "rootDirectory": "/"
       },
       "variables": {

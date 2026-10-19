@@ -27,7 +27,7 @@ The stack is three pieces: ERPNext, a private MariaDB, and a Railway bucket for 
 ### Deployment Dependencies
 
 - [ERPNext documentation](https://docs.frappe.io/erpnext)
-- [Template source on GitHub](https://github.com/nomideusz/erpnext-railway)
+- [Template source on GitHub](https://github.com/two-workspaces/erpnext)
 
 ### Implementation Details
 
