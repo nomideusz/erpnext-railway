@@ -13,12 +13,13 @@ ARG HRMS_VERSION=v16.52.0
 ARG HELPDESK_VERSION=v1.31.0
 # The image keeps the built assets in assets/, outside sites/; linked back during the
 # build, the new app's bundles merge into them instead of replacing the manifest.
+# Helpdesk's Vite build outgrows Node's default heap.
 # telephony (Helpdesk's required app) has no releases, only its develop branch.
 RUN [ -z "$FRAPPE_APPS" ] || { ln -s ../assets sites/assets \
     && for app in $FRAPPE_APPS; do \
       case $app in hrms) v=$HRMS_VERSION ;; helpdesk) v=$HELPDESK_VERSION ;; \
         telephony) v=develop ;; *) echo "unknown app $app"; exit 1 ;; esac; \
-      bench get-app --branch "$v" "https://github.com/frappe/$app" || exit 1; \
+      NODE_OPTIONS=--max-old-space-size=4096 bench get-app --branch "$v" "https://github.com/frappe/$app" || exit 1; \
     done && rm sites/assets; }
 
 USER root
