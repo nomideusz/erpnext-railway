@@ -92,7 +92,7 @@ done
 # A new image version needs `bench migrate` before it serves the site: patches,
 # schema changes and fixtures. A database backup is taken first.
 version=$(for app in $(cat sites/apps.txt); do
-  printf '%s %s, ' "$app" "$(sed -n 's/^__version__ = "\(.*\)"/\1/p' "apps/$app/$app/__init__.py")"; done)
+  printf '%s %s ' "$app" "$(sed -n 's/^__version__ = "\(.*\)"/\1/p' "apps/$app/$app/__init__.py")"; done)
 if [ "$(cat "sites/$SITE/.railway-version" 2>/dev/null)" != "$version" ]; then
   if [ -z "${fresh:-}" ]; then
     echo "railway: new version ($version), backing up the database and migrating"
@@ -132,7 +132,7 @@ PORT=${PORT:-8080} SITE=$SITE envsubst '${PORT} ${SITE}' \
 # log each probe as an upstream error.
 for _ in $(seq 60); do (: </dev/tcp/127.0.0.1/8000) 2>/dev/null && break; sleep 1; done
 "${AS_FRAPPE[@]}" nginx -e stderr -g 'daemon off;' 2>&1 &
-echo "railway: serving ERPNext ($version) with $WEB_WORKERS web and $BG_WORKERS background workers"
+echo "railway: serving ${APPS[*]} ($version) with $WEB_WORKERS web and $BG_WORKERS background workers"
 
 if [ -n "${S3_BUCKET:-}" ]; then
   # 03:00 UTC daily; a failed backup is logged, it never takes ERPNext down.
