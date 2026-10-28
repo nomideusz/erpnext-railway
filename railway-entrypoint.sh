@@ -77,6 +77,9 @@ if [ ! -f "sites/$SITE/.railway-installed" ]; then
       --db-root-username root --db-root-password "$DB_ROOT_PASSWORD" \
       --admin-password "$ERPNEXT_ADMIN_PASSWORD" --install-app "${APPS[0]}" --set-default 2>&1 | bars
     installed "${APPS[0]}" || { echo "railway: site creation failed, retrying on restart"; exit 1; }
+    # ERPNext's setup wizard turns the scheduler on. Without ERPNext nothing does:
+    # Helpdesk users land in its own UI, and it needs the scheduler for SLAs and email.
+    [[ " ${APPS[*]} " == *" erpnext "* ]] || "${AS_FRAPPE[@]}" bench --site "$SITE" enable-scheduler
   fi
   "${AS_FRAPPE[@]}" touch "sites/$SITE/.railway-installed"
   fresh=1
