@@ -63,26 +63,36 @@ done
 # Frappe redraws its progress bars with \r, which Railway would log as one huge line;
 # keep only each bar's final state.
 bars() { sed -u 's/.*\r//'; }
-installed() { "${AS_FRAPPE[@]}" bench --site "$SITE" list-apps 2>/dev/null | grep -q '^erpnext'; }
+# Every app in the image beyond frappe, unless FRAPPE_INSTALL_APPS narrows it.
+read -ra APPS <<< "${FRAPPE_INSTALL_APPS:-$(grep -vx frappe sites/apps.txt | tr '\n' ' ')}"
+installed() { "${AS_FRAPPE[@]}" bench --site "$SITE" list-apps 2>/dev/null | grep -q "^$1"; }
 if [ ! -f "sites/$SITE/.railway-installed" ]; then
   # A site folder without the marker is a first boot that died part-way (the site
-  # never served a request), unless ERPNext is fully installed and only the marker
-  # is missing. Only the first case is rebuilt.
-  if ! { [ -d "sites/$SITE" ] && installed; }; then
+  # never served a request), unless the first app is fully installed and only the
+  # marker is missing. Only the first case is rebuilt.
+  if ! { [ -d "sites/$SITE" ] && installed "${APPS[0]}"; }; then
     : "${ERPNEXT_ADMIN_PASSWORD:?ERPNEXT_ADMIN_PASSWORD is not set}"
-    echo "railway: first boot, creating the ERPNext site (a few minutes)"
+    echo "railway: first boot, creating the site with ${APPS[*]} (a few minutes)"
     "${AS_FRAPPE[@]}" bench new-site "$SITE" --force --mariadb-user-host-login-scope=% \
       --db-root-username root --db-root-password "$DB_ROOT_PASSWORD" \
-      --admin-password "$ERPNEXT_ADMIN_PASSWORD" --install-app erpnext --set-default 2>&1 | bars
-    installed || { echo "railway: site creation failed, retrying on restart"; exit 1; }
+      --admin-password "$ERPNEXT_ADMIN_PASSWORD" --install-app "${APPS[0]}" --set-default 2>&1 | bars
+    installed "${APPS[0]}" || { echo "railway: site creation failed, retrying on restart"; exit 1; }
   fi
   "${AS_FRAPPE[@]}" touch "sites/$SITE/.railway-installed"
   fresh=1
 fi
+# The rest of the apps, on first boot and whenever an image adds one.
+for app in "${APPS[@]:1}"; do
+  installed "$app" && continue
+  echo "railway: installing $app"
+  "${AS_FRAPPE[@]}" bench --site "$SITE" install-app "$app" 2>&1 | bars
+  installed "$app" || { echo "railway: installing $app failed, retrying on restart"; exit 1; }
+done
 
 # A new image version needs `bench migrate` before it serves the site: patches,
 # schema changes and fixtures. A database backup is taken first.
-version=$(jq -r 'to_entries | map("\(.key) \(.value.version)") | join(", ")' sites/apps.json)
+version=$(for app in $(cat sites/apps.txt); do
+  printf '%s %s, ' "$app" "$(sed -n 's/^__version__ = "\(.*\)"/\1/p' "apps/$app/$app/__init__.py")"; done)
 if [ "$(cat "sites/$SITE/.railway-version" 2>/dev/null)" != "$version" ]; then
   if [ -z "${fresh:-}" ]; then
     echo "railway: new version ($version), backing up the database and migrating"

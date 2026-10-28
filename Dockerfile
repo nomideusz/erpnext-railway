@@ -1,7 +1,21 @@
 # Pinned: frappe/erpnext:v16 moves with every weekly release, and a silent rebase can
 # break every deploy of this template at once. Bump deliberately; the entrypoint
 # backs up and migrates the site on the first boot of a new version.
-FROM frappe/erpnext:v16.51.1
+FROM frappe/erpnext:v16.52.1
+
+# More Frappe apps, built into the image the way frappe_docker does it. FRAPPE_APPS
+# is a service variable (Railway passes it as a build arg): the Frappe HR template
+# sets "hrms"; the ERPNext template leaves it empty.
+ARG FRAPPE_APPS=""
+# upgrade: github frappe/hrms
+ARG HRMS_VERSION=v16.52.0
+# The image keeps the built assets in assets/, outside sites/; linked back during the
+# build, the new app's bundles merge into them instead of replacing the manifest.
+RUN [ -z "$FRAPPE_APPS" ] || { ln -s ../assets sites/assets \
+    && for app in $FRAPPE_APPS; do \
+      case $app in hrms) v=$HRMS_VERSION ;; *) echo "unknown app $app"; exit 1 ;; esac; \
+      bench get-app --branch "$v" "https://github.com/frappe/$app" || exit 1; \
+    done && rm sites/assets; }
 
 USER root
 
