@@ -8,7 +8,7 @@ FROM frappe/erpnext:v16.54.0
 # sets "hrms"; the ERPNext template leaves it empty.
 ARG FRAPPE_APPS=""
 # upgrade: github frappe/hrms
-ARG HRMS_VERSION=v16.53.1
+ARG HRMS_VERSION=v16.53.2
 # upgrade: github frappe/helpdesk
 ARG HELPDESK_VERSION=v1.31.0
 # The image keeps the built assets in assets/, outside sites/; linked back during the
